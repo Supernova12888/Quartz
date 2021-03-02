@@ -3,7 +3,7 @@
 
 from strings_with_arrows import *
 
-DIGITS = '0123456789'
+DIGITS = "0123456789"
 
 
 
@@ -12,40 +12,44 @@ DIGITS = '0123456789'
 
 # Parent class of all the types of errors
 class Error:
+    # Initialize error class
     def __init__(self, pos_start, pos_end, error_name, details):
         self.pos_start = pos_start
         self.pos_end = pos_end
         self.error_name = error_name
         self.details = details
     
-    # Returns the error
+    # Returns the error message as a string
     def as_string(self):
-        result = f"  {self.error_name}: {self.details}"
-        result += f"\n    at {self.pos_start.fn}:{self.pos_start.ln}:{self.pos_start.col}"
-        result += "\n    " + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
-        return result
+        msg = f"  {self.error_name}: {self.details}"
+        msg += f"\n    at {self.pos_start.fn}:{self.pos_start.ln + 1}:{self.pos_start.col + 1}"
+        msg += "\n    " + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
+        return msg
 
 # Character error
 class CharError(Error):
+    # Initialize
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'CharError', details)
 
 # Syntax error
 class SyntaxError(Error):
+    # Initialize
     def __init__(self, pos_start, pos_end, details=""):
         super().__init__(pos_start, pos_end, 'SyntaxError', details)
 
 # Runtime error
 class RTError(Error):
+    # Initialize
     def __init__(self, pos_start, pos_end, details, context):
         super().__init__(pos_start, pos_end, 'RuntimeError', details)
         self.context = context
     
-    # Returns the error
+    # Returns the error message as a string
     def as_string(self):
         result = self.generate_traceback()
         result += f"{self.error_name}: {self.details}\n"
-        result += "  " + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
+        result += "    " + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
         return result
     
     # Generate traceback
@@ -68,7 +72,7 @@ class RTError(Error):
 # Handles the position of the user's code
 
 class Position:
-    # Init
+    # Initialize
     def __init__(self, idx, ln, col, fn, ftxt):
         self.idx = idx
         self.ln = ln
@@ -96,6 +100,7 @@ class Position:
 # TOKENS
 # Splits everything in the code into small sections
 
+# All token types
 TT_INT		= 'INT'
 TT_FLOAT    = 'FLOAT'
 TT_PLUS     = 'PLUS'
@@ -103,10 +108,12 @@ TT_MINUS    = 'MINUS'
 TT_MULT     = 'MULT'
 TT_DIV      = 'DIV'
 TT_MOD      = "MOD"
+TT_POW      = "POW"
 TT_LPAREN   = 'LPAREN'
 TT_RPAREN   = 'RPAREN'
 TT_EOF		= 'EOF'
 
+# Token class
 class Token:
     # Init
     def __init__(self, typ, value=None, pos_start=None, pos_end=None):
@@ -121,7 +128,7 @@ class Token:
         if pos_end:
             self.pos_end = pos_end
 	
-    # Repr
+    # Represent
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
@@ -130,8 +137,9 @@ class Token:
 
 # LEXER
 
+# Lexer class
 class Lexer:
-    # Init
+    # Initialize
     def __init__(self, fn, text):
         self.fn = fn
         self.text = text
@@ -139,7 +147,7 @@ class Lexer:
         self.current_char = None
         self.advance()
 	
-    # Advance
+    # Advance position in code
     def advance(self):
         self.pos.advance(self.current_char)
         if self.pos.idx < len(self.text):
@@ -149,14 +157,20 @@ class Lexer:
 
     # Make tokens
     def make_tokens(self):
+        # Store all the tokens
         tokens = []
 
         # Checks if current character is a valid token type
         while self.current_char != None:
+            # Ignore spaces and tabs
             if self.current_char in ' \t':
                 self.advance()
+            
+            # Find number tokens
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
+            
+            # Look for operator tokens
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
@@ -172,12 +186,17 @@ class Lexer:
             elif self.current_char == "%":
                 tokens.append(Token(TT_MOD, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == "^":
+                tokens.append(Token(TT_POW, pos_start=self.pos))
+                self.advance()
             elif self.current_char == '(':
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
                 self.advance()
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            
+            # If it finds an invalid token, throw an error
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
@@ -215,19 +234,20 @@ class Lexer:
 
 # NODES
 
+# NumberNode class
 class NumberNode:
-    # Init
+    # Initialize
     def __init__(self, tok):
         self.tok = tok
         self.pos_start = self.tok.pos_start
         self.pos_end = self.tok.pos_end
     
-    # Repr
+    # Represent
     def __repr__(self):
         return f'{self.tok}'
 
 class BinOpNode:
-    # Init
+    # Initialize
     def __init__(self, left_node, op_tok, right_node):
         self.left_node = left_node
         self.op_tok = op_tok
@@ -235,19 +255,19 @@ class BinOpNode:
         self.pos_start = self.left_node.pos_start
         self.pos_end = self.right_node.pos_end
 
-    # Repr
+    # Represent
     def __repr__(self):
         return f'({self.left_node}, {self.op_tok}, {self.right_node})'
 
 class UnaryOpNode:
-    # Init
+    # Initialize
     def __init__(self, op_tok, node):
         self.op_tok = op_tok
         self.node = node
         self.pos_start = self.op_tok.pos_start
         self.pos_end = node.pos_end
 
-    # Repr
+    # Represent
     def __repr__(self):
         return f'({self.op_tok}, {self.node})'
 
@@ -256,11 +276,13 @@ class UnaryOpNode:
 # PARSE RESULT
 # Handles the result of the parser
 
+# ParseResult class
 class ParseResult:
-    # Init
+    # Initialize
     def __init__(self):
         self.error = None
         self.node = None
+    
     # Register
     def register(self, res):
         if isinstance(res, ParseResult):
@@ -283,6 +305,7 @@ class ParseResult:
 # PARSER
 # Divide the user's code into a tree
 
+# Parser class
 class Parser:
     # Init
     def __init__(self, tokens):
@@ -311,20 +334,13 @@ class Parser:
         
         # If no syntax error, return result
         return res
-
-    # Handles factors
-    def factor(self):
+    
+    # Handles atoms (see text-file/grammar.txt)
+    def atom(self):
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_PLUS, TT_MINUS, TT_MOD):
-            res.register(self.advance())
-            factor = res.register(self.factor())
-            if res.error:
-                return res
-            return res.success(UnaryOpNode(tok, factor))
-        
-        elif tok.type in (TT_INT, TT_FLOAT):
+        if tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
         
@@ -342,11 +358,29 @@ class Parser:
                     "Expected ')'"
                 ))
         
-        # If no number is found, an error is thrown
         return res.failure(SyntaxError(
-            tok.pos_start, tok.pos_end,
-            "Expected a number"
+            self.current_tok.pos_start, self.current_tok.pos_end,
+            "Expected a number, '+', '-', or '('"
         ))
+    
+    def power(self):
+        return self.bin_op(self.atom, (TT_POW, ), self.factor)
+
+    # Handles factors (see text-file/grammar.txt)
+    def factor(self):
+        res = ParseResult()
+        tok = self.current_tok
+
+        # Checks if token type is a plus, minus, or modulus
+        if tok.type in (TT_PLUS, TT_MINUS, TT_MOD):
+            res.register(self.advance())
+            factor = res.register(self.factor())
+            if res.error:
+                return res
+            return res.success(UnaryOpNode(tok, factor))
+        
+        # If no number is found, an error is thrown
+        return self.power()
 
     # Term
     def term(self):
@@ -357,9 +391,12 @@ class Parser:
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
     # Binary operation
-    def bin_op(self, func, ops):
+    def bin_op(self, func_a, ops, func_b=None):
+        if func_b == None:
+            func_b = func_a
+
         res = ParseResult()
-        left = res.register(func())
+        left = res.register(func_a())
         
         if res.error:
             return res
@@ -368,7 +405,7 @@ class Parser:
         while self.current_tok.type in ops:
             op_tok = self.current_tok
             res.register(self.advance())
-            right = res.register(func())
+            right = res.register(func_b())
             if res.error:
                 return res
             left = BinOpNode(left, op_tok, right)
@@ -460,6 +497,11 @@ class Number:
                 )
             return Number(self.value % other.value).set_context(self.context), None
     
+    # Exponentation
+    def powed_by(self, other):
+        if isinstance(other, Number):
+            return Number(self.value ** other.value).set_context(self.context), None
+    
     def __repr__(self):
         return str(self.value)
 
@@ -516,6 +558,8 @@ class Interpreter:
             result, error = left.dived_by(right)
         elif node.op_tok.type == TT_MOD:
             result, error = left.moded_by(right)
+        elif node.op_tok.type == TT_POW:
+            result, error = left.powed_by(right)
         
         # Checks if there is an error
         if error:
