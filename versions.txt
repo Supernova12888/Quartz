@@ -1,0 +1,14 @@
+VERSION ONE:
+  Alpha v1.0.0 (02/18/2021):
+   - NEW: Quartz released
+   - NEW: Can do simple math operations
+   - NEW: CharErrors, SyntaxErrors, and RuntimeErrors
+  
+  Alpha v1.0.1 (02/18/2021):
+   - NEW: The modulus operator to find remainder of two numbers
+   - IMPROVED: Changed a few error descriptions
+
+
+
+
+

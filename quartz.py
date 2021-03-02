@@ -100,8 +100,9 @@ TT_INT		= 'INT'
 TT_FLOAT    = 'FLOAT'
 TT_PLUS     = 'PLUS'
 TT_MINUS    = 'MINUS'
-TT_MULT     = 'MULT' # ?!?!?!
+TT_MULT     = 'MULT'
 TT_DIV      = 'DIV'
+TT_MOD      = "MOD"
 TT_LPAREN   = 'LPAREN'
 TT_RPAREN   = 'RPAREN'
 TT_EOF		= 'EOF'
@@ -167,6 +168,9 @@ class Lexer:
                 self.advance()
             elif self.current_char == '/':
                 tokens.append(Token(TT_DIV, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == "%":
+                tokens.append(Token(TT_MOD, pos_start=self.pos))
                 self.advance()
             elif self.current_char == '(':
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
@@ -302,7 +306,7 @@ class Parser:
             return res.failure(SyntaxError(
                 self.current_tok.pos_start,
                 self.current_tok.pos_end,
-                "Expected '+', '-', '*' or '/'"
+                "Expected '+', '-', '*', '/' or '%'"
             ))
         
         # If no syntax error, return result
@@ -313,15 +317,17 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_PLUS, TT_MINUS):
+        if tok.type in (TT_PLUS, TT_MINUS, TT_MOD):
             res.register(self.advance())
             factor = res.register(self.factor())
             if res.error:
                 return res
             return res.success(UnaryOpNode(tok, factor))
+        
         elif tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
+        
         elif tok.type == TT_LPAREN:
             res.register(self.advance())
             expr = res.register(self.expr())
@@ -339,12 +345,12 @@ class Parser:
         # If no number is found, an error is thrown
         return res.failure(SyntaxError(
             tok.pos_start, tok.pos_end,
-            "Expected int or float"
+            "Expected a number"
         ))
 
     # Term
     def term(self):
-        return self.bin_op(self.factor, (TT_MULT, TT_DIV))
+        return self.bin_op(self.factor, (TT_MULT, TT_DIV, TT_MOD))
 
     # Expression
     def expr(self):
@@ -443,6 +449,17 @@ class Number:
                 )
             return Number(self.value / other.value).set_context(self.context), None
     
+    # Modulus numbers
+    def moded_by(self, other):
+        if isinstance(other, Number):
+            if other.value == 0:
+                return None, RTError(
+                    other.pos_start, other.pos_end,
+                    "Cannot divide by zero",
+                    self.context
+                )
+            return Number(self.value % other.value).set_context(self.context), None
+    
     def __repr__(self):
         return str(self.value)
 
@@ -497,6 +514,8 @@ class Interpreter:
             result, error = left.multed_by(right)
         elif node.op_tok.type == TT_DIV:
             result, error = left.dived_by(right)
+        elif node.op_tok.type == TT_MOD:
+            result, error = left.moded_by(right)
         
         # Checks if there is an error
         if error:
