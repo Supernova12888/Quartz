@@ -4,7 +4,7 @@ import quartz
 def printTxt(txt, clr):
     print(colored(txt, clr))
 
-printTxt("Quartz - Alpha v1.1.0", "cyan")
+printTxt("Quartz - Alpha v1.0.1", "cyan")
 
 while True:
     text = input("\n> ");
@@ -13,7 +13,7 @@ while True:
     if error:
         printTxt(error.as_string(), "red")
     else:
-        print(result)
+        print("  " + str(result))
 
 
 
