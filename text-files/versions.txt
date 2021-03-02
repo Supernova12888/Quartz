@@ -1,0 +1,23 @@
+VERSION ONE:
+  Alpha v1.0.0 (02/18/2021):
+   - NEW: Quartz released
+   - NEW: Can do simple math operations
+   - NEW: CharErrors, SyntaxErrors, and RuntimeErrors
+  
+  Alpha v1.0.1 (02/18/2021):
+   - NEW: The modulus operator to find remainder of two numbers
+   - NEW: The 'versions.txt' file
+   - IMPROVED: Changed a few error descriptions
+  
+  Alpha v1.0.2 (02/19/2021):
+   - NEW: The power operator to find the power of a number
+   - IMPROVED: Starting the console begins with green text instead of cyan
+   - IMPROVED: Line of code where the error occurred starts at line 1
+   - IMPROVED: Column of code where the error occurred starts at line 1
+   - FIXED: "RuntimeError: Cannot divide by zero" message is now aligned correctly
+   - FIXED: Does not throw error if user inputs nothing
+
+
+
+
+
