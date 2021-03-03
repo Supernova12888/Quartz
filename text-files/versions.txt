@@ -16,6 +16,13 @@ VERSION ONE:
    - IMPROVED: Column of code where the error occurred starts at line 1
    - FIXED: "RuntimeError: Cannot divide by zero" message is now aligned correctly
    - FIXED: Does not throw error if user inputs nothing
+  
+  Alpha v1.1.0 (mm/dd/2021):
+   - NEW: The colon operator used to defined variables
+   - NEW: Create variables and access the values of the variables
+   - IMPROVED: Changed "<console>" to "[console]" if the terminal throws an error after the user inputs something
+   - FIXED: Changed SyntaxError "Expected '+', '-', '*', '/' or '%'" to "Expected '+', '-', '*', '/', '%', or '^'"
+   - FIXED: Stopped incorrect errors from showing up because of the new variables feature
 
 
 
